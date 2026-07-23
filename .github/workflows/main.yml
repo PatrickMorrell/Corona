@@ -1,0 +1,40 @@
+name: Deploy App to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-app:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10
+
+      - name: Publish .NET Project
+        run: dotnet publish -c Release -o release --nologo
+
+      - name: Update base href
+        run: sed -i 's/<base href="\/" \/>/<base
+          href="https:\/\/patrickmorrell.github.io\/Corona\/" \/>/g'
+          release/wwwroot/index.html
+
+      - name: Add .nojekyll file
+        run: touch release/wwwroot/.nojekyll
+
+      - name: Commit wwwroot to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: git-pages
+          folder: release/wwwroot
+          token: ${{ secrets.GITHUB_TOKEN }}
